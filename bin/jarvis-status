@@ -1,0 +1,12 @@
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$HOME/jarvis" || exit 1
+python3 - <<'PY'
+import brain, hud, stt, tts
+print("otak       :", brain.ensure_session())
+print("HUD        : http://127.0.0.1:8769")
+print("status     :", hud.snapshot()["mode"])
+print("whisper    :", "ada" if stt.WHISPER.exists() else "belum ada")
+for m in (stt.WAKE_MODEL, stt.VOICE_MODEL):
+    print(f"model {m.name:16}:", f"{m.stat().st_size/1e6:.0f} MB" if m.exists() else "belum ada")
+print("TTS        :", "id-ID" if tts.LANG else "default Android")
+PY

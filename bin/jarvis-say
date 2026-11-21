@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Dipakai otak OpenCode untuk bicara secara proaktif.
+cd "$HOME/jarvis" || exit 1
+exec python3 -c 'import sys, tts, hud; t=hud.snapshot(); hud.set_state(mode="speaking", reply=" ".join(sys.argv[1:])); tts.speak(" ".join(sys.argv[1:])); hud.set_state(mode=t["mode"])' "$@"

@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Tanya langsung ke otak JARVIS tanpa mikrofon.
+cd "$HOME/jarvis" || exit 1
+exec python3 brain.py "$@"

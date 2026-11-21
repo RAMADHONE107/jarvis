@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.log
+tts.fifo
+
+# Model whisper.cpp besar (>100 MB per file) tidak masuk GitHub.
+# Unduh manual ke models/ bila ingin memakai cadangan offline.
+models/
+
+# Vendor whisper.cpp sudah punya git sendiri; tidak di-embed di repo ini.
+whisper.cpp/

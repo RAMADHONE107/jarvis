@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Dipanggil oleh tombol Direct Reply pada notifikasi JARVIS.
+export PATH=/data/data/com.termux/files/usr/bin:$PATH
+TEXT="$1"
+[ -z "$TEXT" ] && exit 0
+DATA=$(python3 -c 'import json,sys; print(json.dumps({"text":sys.argv[1]}, ensure_ascii=False))' "$TEXT")
+curl -s --max-time 5 -X POST http://127.0.0.1:8769/api/text \
+  -H 'Content-Type: application/json' --data "$DATA" >/dev/null
+termux-toast "JARVIS: perintah diterima"

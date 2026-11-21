@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J.A.R.V.I.S. // Termux</title>
+<style>
+  :root{
+    --cyan:#5ff9ff; --cyan-dim:#159aa6; --amber:#ffb545; --green:#6bff9e;
+    --bg:#04090d; --panel:rgba(8,22,29,.72); --line:rgba(95,249,255,.22);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:#dffcff;
+    font-family:ui-monospace,SFMono-Regular,Consolas,"Roboto Mono",monospace;overflow:hidden}
+  body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.22) 4px)}
+  .grid{position:fixed;inset:0;z-index:0;opacity:.22;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:48px 48px;transform:perspective(400px) rotateX(52deg) scale(2);transform-origin:bottom}
+  .wrap{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:14px 16px 12px;gap:10px}
+  header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .brand{letter-spacing:.32em;font-size:12px;color:var(--cyan);text-shadow:0 0 14px var(--cyan)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .chip{font-size:9px;letter-spacing:.1em;border:1px solid var(--line);padding:4px 7px;border-radius:2px;color:#9fdde3}
+  .chip b{color:var(--cyan);font-weight:600}
+  main{flex:1;display:grid;grid-template-columns:1fr 1.15fr;gap:12px;min-height:0}
+  @media(max-width:640px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;position:relative;overflow:hidden;
+    box-shadow:inset 0 0 40px rgba(0,255,255,.04)}
+  .panel:after{content:"";position:absolute;left:0;top:0;width:22px;height:22px;border-left:2px solid var(--cyan);border-top:2px solid var(--cyan)}
+  .title{font-size:9px;letter-spacing:.28em;color:var(--cyan-dim);padding:10px 12px;border-bottom:1px solid var(--line)}
+  .reactor{height:100%;min-height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+  .orb{width:min(38vh,190px);aspect-ratio:1;border-radius:50%;position:relative;display:grid;place-items:center;
+    background:radial-gradient(circle at 50% 50%,rgba(95,249,255,.28) 0 12%,transparent 13%),
+      conic-gradient(from 0deg,transparent 0 12deg,var(--cyan) 13deg 15deg,transparent 16deg 45deg);
+    box-shadow:0 0 60px rgba(95,249,255,.22),inset 0 0 30px rgba(95,249,255,.15);
+    animation:spin 14s linear infinite}
+  .orb:before,.orb:after{content:"";position:absolute;border-radius:50%;border:1px solid var(--cyan-dim);opacity:.65}
+  .orb:before{inset:12%;border-style:dashed;animation:spin 9s linear infinite reverse}
+  .orb:after{inset:26%;border-width:3px;border-color:var(--cyan);box-shadow:0 0 22px var(--cyan)}
+  .core{width:38%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#eaffff 0 18%,var(--cyan) 40%,#035b64 72%,#021014 100%);
+    box-shadow:0 0 40px var(--cyan);animation:pulse 2.4s ease-in-out infinite}
+  .mode{font-size:10px;letter-spacing:.34em;color:var(--cyan);text-shadow:0 0 10px currentColor}
+  .wave{display:flex;gap:3px;align-items:flex-end;height:26px}
+  .wave i{width:3px;height:4px;background:var(--cyan-dim);border-radius:2px}
+  body[data-mode="listening"] .wave i{animation:bar .7s ease-in-out infinite alternate}
+  body[data-mode="listening"] .orb{animation-duration:3s}
+  body[data-mode="listening"] .mode{color:#8ef1ff}
+  body[data-mode="thinking"] .orb{filter:hue-rotate(135deg)}
+  body[data-mode="thinking"] .wave i{background:var(--amber)}
+  body[data-mode="thinking"] .mode{color:var(--amber)}
+  body[data-mode="speaking"] .orb{filter:hue-rotate(255deg)}
+  body[data-mode="speaking"] .mode{color:var(--green)}
+  body[data-mode="speaking"] .wave i{background:var(--green)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{50%{transform:scale(.9);filter:brightness(1.35)}}
+  @keyframes bar{to{height:24px}}
+  .chat{height:100%;display:flex;flex-direction:column;min-height:0}
+  .transcript{flex:1;overflow-y:auto;padding:14px;font-size:12px;line-height:1.65}
+  .turn{margin:0 0 14px;animation:fade .3s ease}
+  .turn .who{font-size:9px;letter-spacing:.2em;color:var(--cyan-dim);margin-bottom:3px}
+  .turn.jarvis .who{color:var(--green)}
+  .turn .bubble{border-left:2px solid var(--cyan-dim);padding-left:10px;color:#bfeef2;white-space:pre-wrap}
+  .turn.jarvis .bubble{border-color:var(--green);color:#e6fff0}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}}
+  .log{border-top:1px solid var(--line);padding:6px 12px;font-size:9px;color:#7fb8be;height:62px;overflow:hidden}
+  .log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  footer{display:flex;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+  input{flex:1;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#dffcff;padding:10px 12px;
+    font:inherit;font-size:12px;outline:none;border-radius:2px}
+  input:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(95,249,255,.18)}
+  button{background:rgba(95,249,255,.1);border:1px solid var(--cyan);color:var(--cyan);padding:10px 14px;
+    font:inherit;font-size:10px;letter-spacing:.16em;cursor:pointer;border-radius:2px}
+  button:hover{background:rgba(95,249,255,.22)}
+</style>
+</head>
+<body data-mode="idle">
+<div class="grid"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">J.A.R.V.I.S. // TERMUX</div>
+    <div class="chips">
+      <div class="chip">OTAK <b id="brain">—</b></div>
+      <div class="chip">BATERAI <b id="battery">—</b></div>
+      <div class="chip">WAKE <b id="wake">—</b></div>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="title">ARC REACTOR / STATUS</div>
+      <div class="reactor">
+        <div class="orb"><div class="core"></div></div>
+        <div class="mode" id="mode">STANDBY</div>
+        <div class="wave" id="wave"></div>
+      </div>
+    </section>
+    <section class="panel chat">
+      <div class="title">KOMUNIKASI</div>
+      <div class="transcript" id="transcript"></div>
+      <div class="log" id="log"></div>
+    </section>
+  </main>
+  <footer>
+    <input id="text" placeholder="Ketik perintah atau tekan AKTIFKAN untuk bicara..." autocomplete="off">
+    <button id="wakeBtn">AKTIFKAN</button>
+    <button id="sendBtn">KIRIM</button>
+  </footer>
+</div>
+<script>
+const wave = document.getElementById('wave');
+for (let i=0;i<22;i++) wave.appendChild(document.createElement('i'));
+const labels = {idle:'STANDBY',listening:'MENDENGARKAN',thinking:'MEMPROSES',speaking:'MENJAWAB'};
+let lastUser='', lastReply='';
+function render(s){
+  document.body.dataset.mode = s.mode;
+  document.getElementById('mode').textContent = labels[s.mode] || s.mode.toUpperCase();
+  document.getElementById('brain').textContent = s.brain;
+  document.getElementById('wake').textContent = s.wake;
+  const t = document.getElementById('transcript');
+  if (s.user && s.user !== lastUser){
+    const d=document.createElement('div'); d.className='turn';
+    d.innerHTML='<div class="who">ANDA</div><div class="bubble"></div>';
+    d.querySelector('.bubble').textContent=s.user; t.appendChild(d); lastUser=s.user;
+  }
+  if (s.reply && s.reply !== lastReply){
+    const d=document.createElement('div'); d.className='turn jarvis';
+    d.innerHTML='<div class="who">J.A.R.V.I.S.</div><div class="bubble"></div>';
+    d.querySelector('.bubble').textContent=s.reply; t.appendChild(d); lastReply=s.reply;
+  }
+  t.scrollTop=t.scrollHeight;
+  document.getElementById('log').innerHTML=(s.log||[]).map(x=>'<div>&gt; '+x+'</div>').join('');
+}
+const es=new EventSource('/events');
+es.onmessage=e=>{ try{render(JSON.parse(e.data))}catch(_){} };
+fetch('/api/state').then(r=>r.json()).then(render);
+function refreshInfo(){
+  fetch('/api/info').then(r=>r.json()).then(d=>{
+    if(d.battery) document.getElementById('battery').textContent=d.battery.percentage+'%';
+  }).catch(()=>{});
+}
+refreshInfo(); setInterval(refreshInfo,30000);
+function post(path,body){
+  fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+}
+function send(){
+  const el=document.getElementById('text'); const v=el.value.trim();
+  if(v){ post('/api/text',{text:v}); el.value=''; }
+}
+document.getElementById('sendBtn').onclick=send;
+document.getElementById('wakeBtn').onclick=()=>post('/api/wake');
+document.getElementById('text').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+</script>
+</body>
+</html>

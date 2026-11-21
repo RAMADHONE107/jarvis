@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Jalankan asisten JARVIS lengkap.
+cd "$HOME/jarvis" || exit 1
+exec python3 jarvis.py "$@"
